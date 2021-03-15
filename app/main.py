@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas, cloudflare
+from .config import settings
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -31,7 +32,7 @@ def write_dns_to_file(db: Session):
     json_records = [schemas.DNSRecordDB.from_orm(record).json() for record in db_records]
 
     # make file name an env var
-    with open('.backup/dns_records.json', 'w') as f:
+    with open(settings.BACKUP_FILE, 'w') as f:
         f.write('\n'.join(json_records))
         f.write('\n')
 
