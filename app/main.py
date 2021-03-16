@@ -92,7 +92,7 @@ def upsert_dns_record(
 
 
 @app.put('/dns-records', response_model=List[schemas.DNSRecord])
-def replace_dns_records_owner(
+def replace_dns_records(
         dns_record: List[schemas.DNSRecord],
         background_tasks: BackgroundTasks,
         db: Session = Depends(get_db),

@@ -6,8 +6,7 @@ services:
       - "80:80"
     volumes:
       - ./data/:/app/data/
-      - ./sql_app.db:/app/sql_app.db
     environment:
-      SQLALCHEMY_DATABASE_URL: "sqlite:///./data/sqlite.db"
-      BACKUP_FILE: './data/backup.json'
+      SQLALCHEMY_DATABASE_URL: "sqlite:////app/data/sqlite.db"
+      BACKUP_FILE: '/app/data/backup.json'
       DOMAIN_CONFIG: '{"example.com": {"zone_id": "my_zone_id", "jwt": "${my_bearer}"}}'
