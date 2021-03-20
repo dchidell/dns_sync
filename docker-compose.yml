@@ -7,6 +7,7 @@ services:
     volumes:
       - ./data/:/app/data/
     environment:
-      SQLALCHEMY_DATABASE_URL: "sqlite:////app/data/sqlite.db"
+      SQLALCHEMY_DATABASE_URL: "sqlite:////app/data/sqlite.db?check_same_thread=False"
       BACKUP_FILE: '/app/data/backup.json'
       DOMAIN_CONFIG: '{"example.com": {"zone_id": "my_zone_id", "jwt": "${my_bearer}"}}'
+      MAX_WORKERS: "1"

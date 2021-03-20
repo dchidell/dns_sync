@@ -9,8 +9,6 @@ from app.schemas import BaseDNSRecord, Types, DNSRecordCloudflare, DNSRecordDB
 from app.config import settings
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
 
 BASE_URL = 'https://api.cloudflare.com/client/v4/'
 

@@ -1,14 +1,22 @@
-from sqlalchemy import create_engine
+from functools import lru_cache
+from typing import Iterator
+
+from fastapi_utils.session import FastAPISessionMaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 
 from app.config import settings
 
-SQLALCHEMY_DATABASE_URL = settings.SQLALCHEMY_DATABASE_URL
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def get_db() -> Iterator[Session]:
+    """ FastAPI dependency that provides a sqlalchemy session """
+    yield from _get_fastapi_sessionmaker().get_db()
+
+
+@lru_cache()
+def _get_fastapi_sessionmaker() -> FastAPISessionMaker:
+    """ This function could be replaced with a global variable if preferred """
+    return FastAPISessionMaker(settings.SQLALCHEMY_DATABASE_URL)
+
 
 Base = declarative_base()

@@ -3,28 +3,23 @@ from typing import List, Union
 
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
+from fastapi_utils.tasks import repeat_every
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas, cloudflare
 from .config import settings
-from .database import SessionLocal, engine
+from .database import get_db, _get_fastapi_sessionmaker
 
-models.Base.metadata.create_all(bind=engine)
+logging.basicConfig(
+    format="%(asctime)s - %(process)s - %(name)s - %(lineno)d - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
+
+session_maker = _get_fastapi_sessionmaker()
+models.Base.metadata.create_all(bind=session_maker.cached_engine)
 
 app = FastAPI()
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
-
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 def write_dns_to_file(db: Session):
@@ -35,6 +30,15 @@ def write_dns_to_file(db: Session):
     with open(settings.BACKUP_FILE, 'w') as f:
         f.write('\n'.join(json_records))
         f.write('\n')
+
+
+@app.on_event("startup")
+@repeat_every(seconds=30, logger=logger, wait_first=True)
+async def run_sync_with_cloudflare() -> None:
+    logger.info('Starting Cloudflare Sync')
+    with session_maker.context_session() as db:
+        await sync_with_cloudflare(db=db)
+    logger.info('Finished Cloudflare Sync')
 
 
 async def sync_with_cloudflare(db: Session):
@@ -71,7 +75,6 @@ def delete_dns_record(dns_name: str, background_tasks: BackgroundTasks, db: Sess
     except ValueError:
         raise HTTPException(status_code=404, detail="DNS Record not found")
     background_tasks.add_task(write_dns_to_file, db)
-    background_tasks.add_task(sync_with_cloudflare, db)
     return {'deleted': True}
 
 
@@ -87,7 +90,6 @@ def upsert_dns_record(
         db_dns_record = crud.upsert_dns(db=db, dns_record=dns_record)
 
     background_tasks.add_task(write_dns_to_file, db)
-    background_tasks.add_task(sync_with_cloudflare, db)
     return db_dns_record
 
 
@@ -100,7 +102,6 @@ def replace_dns_records(
     db_dns_record = crud.soft_sync_all_dns_records(db=db, dns_records=dns_record)
 
     background_tasks.add_task(write_dns_to_file, db)
-    background_tasks.add_task(sync_with_cloudflare, db)
     return db_dns_record
 
 
@@ -114,7 +115,6 @@ def replace_dns_records_owner(
 
     db_dns_record = crud.soft_sync_all_dns_records(db=db, dns_records=dns_record, owner=owner_name)
     background_tasks.add_task(write_dns_to_file, db)
-    background_tasks.add_task(sync_with_cloudflare, db)
     return db_dns_record
 
 
@@ -126,7 +126,6 @@ def delete_dns_records_owner(
 ):
     crud.soft_delete_all_dns_records(db, owner=owner_name)
     background_tasks.add_task(write_dns_to_file, db)
-    background_tasks.add_task(sync_with_cloudflare, db)
     return {'deleted': True}
 
 
@@ -137,5 +136,4 @@ def delete_dns_records(
 ):
     crud.soft_delete_all_dns_records(db)
     background_tasks.add_task(write_dns_to_file, db)
-    background_tasks.add_task(sync_with_cloudflare, db)
     return {'deleted': True}
