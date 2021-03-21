@@ -22,3 +22,4 @@ Developed using Python 3.8
 - Run `export DOMAIN_CONFIG='{"my config": "as per config.py"}` and other options in config.py if needed
 - Run `uvicorn app.main:app` optionally include the `--reload` flag
 to watch for changes to the files during dev
+- See uvicorn logs for url of api (and append `/docs` to see API documentation)
