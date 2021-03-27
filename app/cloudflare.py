@@ -1,12 +1,12 @@
+import asyncio
+import itertools
 import logging
 from typing import List, Optional, TypeVar
-import itertools
 
 import httpx
-import asyncio
 
-from app.schemas import BaseDNSRecord, Types, DNSRecordCloudflare, DNSRecordDB
 from app.config import settings
+from app.schemas import BaseDNSRecord, DNSRecordCloudflare, DNSRecordDB, Types
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ async def get_all_dns_records_cf(client: httpx.AsyncClient):
     for domain, config in settings.domain_config.items():
         for page in itertools.count(start=1):
             r = await client.get(
-                f"zones/{config.zone_id}/dns_records",
+                f'zones/{config.zone_id}/dns_records',
                 params={'page': page, 'per_page': per_page},
                 auth=DomainAuth(domain),
             )
@@ -65,7 +65,8 @@ async def sync_dns_record(
 
     if dns_record_db.to_delete and dns_record_cf is None:
         logger.warning(
-            f'DNS Record in DB is marked for deletion but does not exist (record: {dns_record_db})'
+            f'DNS Record in DB is marked for deletion but does not exist'
+            f' (record: {dns_record_db})'
         )
     elif dns_record_db.to_delete:
         if BaseDNSRecord(**dns_record_db.dict()) != BaseDNSRecord(
@@ -78,7 +79,7 @@ async def sync_dns_record(
         logger.info(f'Delete: {dns_record_cf}')
         response_futures.append(
             client.delete(
-                f"zones/{dns_record_cf.zone_id}/dns_records/{dns_record_cf.id}",
+                f'zones/{dns_record_cf.zone_id}/dns_records/{dns_record_cf.id}',
                 auth=DomainAuth(dns_record_cf.domain),
             )
         )
@@ -114,12 +115,14 @@ async def sync_dns_record(
             response.raise_for_status()
         except httpx.RequestError as exc:
             logger.info(
-                f"An error occurred while requesting {exc.request.method!r} {exc.request.url!r}."
+                f'An error occurred while requesting {exc.request.method!r}'
+                f' {exc.request.url!r}.'
             )
         except httpx.HTTPStatusError as exc:
             logger.warning(
-                f"Error response {exc.response.status_code}: {exc.response.read()},"
-                f" while doing {exc.request.method!r} {exc.request.url!r} with: {exc.request.read()!r}"
+                f'Error response {exc.response.status_code}: {exc.response.read()},'
+                f' while doing {exc.request.method!r} {exc.request.url!r} with:'
+                f' {exc.request.read()!r}'
             )
 
 

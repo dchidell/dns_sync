@@ -2,16 +2,17 @@ import logging
 from typing import List, Union
 
 import httpx
-from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi_utils.tasks import repeat_every
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas, cloudflare
+from . import cloudflare, crud, models, schemas
 from .config import settings
-from .database import get_db, _get_fastapi_sessionmaker
+from .database import _get_fastapi_sessionmaker, get_db
 
 logging.basicConfig(
-    format="%(asctime)s - %(process)s - %(name)s - %(lineno)d - %(levelname)s - %(message)s",
+    format='%(asctime)s - %(process)s - %(name)s - %(lineno)d - %(levelname)s -'
+    ' %(message)s',
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def write_dns_to_file(db: Session):
         f.write('\n')
 
 
-@app.on_event("startup")
+@app.on_event('startup')
 @repeat_every(seconds=30, logger=logger, wait_first=True)
 async def run_sync_with_cloudflare() -> None:
     logger.info('Starting Cloudflare Sync')
@@ -66,7 +67,7 @@ def get_owner_dns_records(owner_name: str, db: Session = Depends(get_db)):
 def get_dns_record(dns_name: str, db: Session = Depends(get_db)):
     dns_record = crud.get_dns_by_name(db=db, dns_name=dns_name)
     if dns_record is None:
-        raise HTTPException(status_code=404, detail="DNS Record not found")
+        raise HTTPException(status_code=404, detail='DNS Record not found')
     return dns_record
 
 
@@ -77,7 +78,7 @@ def delete_dns_record(
     try:
         crud.soft_delete_dns(db=db, dns_name=dns_name)
     except ValueError:
-        raise HTTPException(status_code=404, detail="DNS Record not found")
+        raise HTTPException(status_code=404, detail='DNS Record not found')
     background_tasks.add_task(write_dns_to_file, db)
     return {'deleted': True}
 

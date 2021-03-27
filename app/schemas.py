@@ -43,11 +43,11 @@ class DNSRecord(BaseDNSRecord):
     class Config:
         orm_mode = True
         schema_extra = {
-            "example": {
-                "type": "A",
-                "name": "example.com",
-                "content": '0.0.0.0',
-                "ttl": '1',
+            'example': {
+                'type': 'A',
+                'name': 'example.com',
+                'content': '0.0.0.0',
+                'ttl': '1',
                 'proxied': True,
                 'owner': 'string',
             }

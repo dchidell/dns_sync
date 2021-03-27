@@ -4,7 +4,7 @@ from .database import Base
 
 
 class DNSRecord(Base):
-    __tablename__ = "dns_records"
+    __tablename__ = 'dns_records'
 
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String)
