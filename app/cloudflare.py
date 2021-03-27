@@ -35,9 +35,9 @@ def lookup_in_list_of_dns_records(name: str, dns_records: List[T]) -> Optional[T
 async def get_all_dns_records_cf(client: httpx.AsyncClient):
     _dns_records_cf = []
 
+    per_page = 100
     for domain, config in settings.domain_config.items():
         for page in itertools.count(start=1):
-            per_page = 100
             r = await client.get(
                 f"zones/{config.zone_id}/dns_records",
                 params={'page': page, 'per_page': per_page},

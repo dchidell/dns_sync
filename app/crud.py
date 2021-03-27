@@ -59,8 +59,7 @@ def upsert_dns(db: Session, dns_record: schemas.DNSRecord) -> models.DNSRecord:
 def _upsert_dns_records(
     db: Session, dns_records: List[schemas.DNSRecord]
 ) -> List[models.DNSRecord]:
-    db_dns_records = [_upsert_dns_record(db, dns_record) for dns_record in dns_records]
-    return db_dns_records
+    return [_upsert_dns_record(db, dns_record) for dns_record in dns_records]
 
 
 def upsert_dns_records(
