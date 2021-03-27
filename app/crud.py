@@ -8,7 +8,9 @@ from . import models, schemas
 sentinel = object()
 
 
-def get_dns_records(db: Session, owner: str = sentinel, show_soft_deleted=True) -> List[models.DNSRecord]:
+def get_dns_records(
+    db: Session, owner: str = sentinel, show_soft_deleted=True
+) -> List[models.DNSRecord]:
     if not show_soft_deleted:
         q = db.query(models.DNSRecord).filter_by(to_delete=False)
     else:
@@ -20,7 +22,9 @@ def get_dns_records(db: Session, owner: str = sentinel, show_soft_deleted=True) 
     return q.all()
 
 
-def get_soft_deleted_dns_records(db: Session, owner: str = sentinel) -> List[models.DNSRecord]:
+def get_soft_deleted_dns_records(
+    db: Session, owner: str = sentinel
+) -> List[models.DNSRecord]:
     if owner is not sentinel:
         return db.query(models.DNSRecord).filter_by(owner=owner, to_delete=True).all()
 
@@ -52,15 +56,16 @@ def upsert_dns(db: Session, dns_record: schemas.DNSRecord) -> models.DNSRecord:
     return db_dns_record
 
 
-def _upsert_dns_records(db: Session, dns_records: List[schemas.DNSRecord]) -> List[models.DNSRecord]:
-    db_dns_records = [
-        _upsert_dns_record(db, dns_record)
-        for dns_record in dns_records
-    ]
+def _upsert_dns_records(
+    db: Session, dns_records: List[schemas.DNSRecord]
+) -> List[models.DNSRecord]:
+    db_dns_records = [_upsert_dns_record(db, dns_record) for dns_record in dns_records]
     return db_dns_records
 
 
-def upsert_dns_records(db: Session, dns_records: List[schemas.DNSRecord]) -> List[models.DNSRecord]:
+def upsert_dns_records(
+    db: Session, dns_records: List[schemas.DNSRecord]
+) -> List[models.DNSRecord]:
     db_dns_records = _upsert_dns_records(db, dns_records)
 
     db.commit()
@@ -92,7 +97,9 @@ def delete_dns(db: Session, dns_name: str):
     db.commit()
 
 
-def _soft_delete_all_dns_records(db: Session, owner: str = sentinel) -> List[models.DNSRecord]:
+def _soft_delete_all_dns_records(
+    db: Session, owner: str = sentinel
+) -> List[models.DNSRecord]:
     db_dns_records = get_dns_records(db, owner=owner)
 
     for db_dns_record in db_dns_records:
@@ -121,9 +128,9 @@ def soft_delete_all_dns_records(db: Session, owner: str = sentinel):
 
 
 def soft_sync_all_dns_records(
-        db: Session,
-        dns_records: List[schemas.DNSRecord],
-        owner: str = sentinel,
+    db: Session,
+    dns_records: List[schemas.DNSRecord],
+    owner: str = sentinel,
 ) -> List[models.DNSRecord]:
 
     _soft_delete_all_dns_records(db, owner)
@@ -135,9 +142,9 @@ def soft_sync_all_dns_records(
 
 
 def sync_all_dns_records(
-        db: Session,
-        dns_records: List[schemas.DNSRecord],
-        owner: str = sentinel,
+    db: Session,
+    dns_records: List[schemas.DNSRecord],
+    owner: str = sentinel,
 ) -> List[models.DNSRecord]:
 
     _delete_all_dns_records(db, owner)

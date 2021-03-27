@@ -49,7 +49,7 @@ class DNSRecord(BaseDNSRecord):
                 "content": '0.0.0.0',
                 "ttl": '1',
                 'proxied': True,
-                'owner': 'string'
+                'owner': 'string',
             }
         }
 

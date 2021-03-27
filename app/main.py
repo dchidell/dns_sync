@@ -24,7 +24,9 @@ app = FastAPI()
 
 def write_dns_to_file(db: Session):
     db_records = crud.get_dns_records(db, show_soft_deleted=False)
-    json_records = [schemas.DNSRecordDB.from_orm(record).json() for record in db_records]
+    json_records = [
+        schemas.DNSRecordDB.from_orm(record).json() for record in db_records
+    ]
 
     # make file name an env var
     with open(settings.BACKUP_FILE, 'w') as f:
@@ -69,7 +71,9 @@ def get_dns_record(dns_name: str, db: Session = Depends(get_db)):
 
 
 @app.delete('/dns-records/{dns_name}')
-def delete_dns_record(dns_name: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def delete_dns_record(
+    dns_name: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
     try:
         crud.soft_delete_dns(db=db, dns_name=dns_name)
     except ValueError:
@@ -78,11 +82,13 @@ def delete_dns_record(dns_name: str, background_tasks: BackgroundTasks, db: Sess
     return {'deleted': True}
 
 
-@app.patch('/dns-records', response_model=Union[schemas.DNSRecord, List[schemas.DNSRecord]])
+@app.patch(
+    '/dns-records', response_model=Union[schemas.DNSRecord, List[schemas.DNSRecord]]
+)
 def upsert_dns_record(
-        dns_record: Union[schemas.DNSRecord, List[schemas.DNSRecord]],
-        background_tasks: BackgroundTasks,
-        db: Session = Depends(get_db),
+    dns_record: Union[schemas.DNSRecord, List[schemas.DNSRecord]],
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     if isinstance(dns_record, list):
         db_dns_record = crud.upsert_dns_records(db=db, dns_records=dns_record)
@@ -95,9 +101,9 @@ def upsert_dns_record(
 
 @app.put('/dns-records', response_model=List[schemas.DNSRecord])
 def replace_dns_records(
-        dns_record: List[schemas.DNSRecord],
-        background_tasks: BackgroundTasks,
-        db: Session = Depends(get_db),
+    dns_record: List[schemas.DNSRecord],
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     db_dns_record = crud.soft_sync_all_dns_records(db=db, dns_records=dns_record)
 
@@ -107,22 +113,24 @@ def replace_dns_records(
 
 @app.put('/owner/{owner_name}/dns-records', response_model=List[schemas.DNSRecord])
 def replace_dns_records_owner(
-        owner_name: str,
-        dns_record: List[schemas.DNSRecord],
-        background_tasks: BackgroundTasks,
-        db: Session = Depends(get_db),
+    owner_name: str,
+    dns_record: List[schemas.DNSRecord],
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
 
-    db_dns_record = crud.soft_sync_all_dns_records(db=db, dns_records=dns_record, owner=owner_name)
+    db_dns_record = crud.soft_sync_all_dns_records(
+        db=db, dns_records=dns_record, owner=owner_name
+    )
     background_tasks.add_task(write_dns_to_file, db)
     return db_dns_record
 
 
 @app.delete('/owner/{owner_name}/dns-records')
 def delete_dns_records_owner(
-        owner_name: str,
-        background_tasks: BackgroundTasks,
-        db: Session = Depends(get_db),
+    owner_name: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     crud.soft_delete_all_dns_records(db, owner=owner_name)
     background_tasks.add_task(write_dns_to_file, db)
@@ -131,8 +139,8 @@ def delete_dns_records_owner(
 
 @app.delete('/dns-records')
 def delete_dns_records(
-        background_tasks: BackgroundTasks,
-        db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     crud.soft_delete_all_dns_records(db)
     background_tasks.add_task(write_dns_to_file, db)
