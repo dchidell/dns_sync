@@ -45,7 +45,7 @@ async def run_sync_with_cloudflare() -> None:
 
 
 async def sync_with_cloudflare(db: Session):
-    dns_records_db = crud.get_dns_records(db)
+    dns_records_db = crud.get_dns_records(db, only_config_domains=True)
     dns_records_db = [schemas.DNSRecordDB.from_orm(dns) for dns in dns_records_db]
     async with httpx.AsyncClient(base_url=cloudflare.BASE_URL) as client:
         await cloudflare.sync_dns_records(dns_records_db, client=client)

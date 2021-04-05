@@ -3,21 +3,33 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from . import models, schemas
+from .config import settings
 
 # required to allow use of None (as NULL) as a specified value
 sentinel = object()
 
 
 def get_dns_records(
-    db: Session, owner: str = sentinel, show_soft_deleted=True
+    db: Session,
+    owner: str = sentinel,
+    show_soft_deleted=True,
+    only_config_domains=False,
 ) -> List[models.DNSRecord]:
-    if not show_soft_deleted:
-        q = db.query(models.DNSRecord).filter_by(to_delete=False)
-    else:
-        q = db.query(models.DNSRecord)
+
+    q = db.query(models.DNSRecord)
 
     if owner is not sentinel:
-        return q.filter_by(owner=owner).all()
+        q = q.filter_by(owner=owner)
+
+    if not show_soft_deleted:
+        q = q.filter_by(to_delete=False)
+
+    if only_config_domains:
+        return [
+            dns_record
+            for dns_record in q.all()
+            if dns_record.name.endswith(tuple(settings.domain_config))
+        ]
 
     return q.all()
 
