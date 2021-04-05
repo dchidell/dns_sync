@@ -22,6 +22,8 @@ class BaseDNSRecord(BaseModel):
 
     @validator('name')
     def domain_is_setup(cls, v: str):
+        if settings.ACCEPT_UNCONFIGURED_DOMAINS:
+            return v
         if not v.endswith(tuple(domain_config)):
             raise ValueError(f'must end with a supported domain: {list(domain_config)}')
         return v
